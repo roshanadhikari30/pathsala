@@ -1,0 +1,569 @@
+/*Author: Roshan Adhikari*/
+/*Date- feb 9-feb22*/
+/*used OS- ubuntu 14.04 LTS*/
+/*used database: mysql Ver 14.14 Distrib 5.5.47, for debian-linux-gnu (x86_64) using readline 6.3*/
+-------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------
+Suppliers(sid:integer, sname:string, address:string)
+Parts(pid:integer, pname:string, color:string)
+Catalog(sid:integer, pid:integer, cost:real)
+
+The Catalog relation lists the prices charged for parts by suppliers. Write the following queries in SQL:
+
+1.Find the pnames of parts for which there is some supplier.
+Answer: mysql> SELECT DISTINCT pname FROM parts,catalog WHERE parts.pid=catalog.pid;
++-----------------------------------+
+| pname                             |
++-----------------------------------+
+| Left Handed Bacon Stretcher Cover |
+| Acme Widget Washer                |
+| I Brake for Crop Circles Sticker  |
+| Anti-Gravity Turbine Generator    |
+| Fire Hydrant Cap                  |
+| 7 Segment Display                 |
++-----------------------------------+
+6 rows in set (0.00 sec)
+............................................................................................................................
+2.Find the snames of suppliers who supply every part.
+Answer:SELECT sname FROM(SELECT sname, count(pid) as num from catalog C, suppliers S  WHERE C.sid=S.sid  GROUP BY C.sid) as names  where num =  (SELECT count(*) from parts);
+
+Empty set (0.00 sec)
+
+...............................................................................................................................
+3.Find the snames of suppliers who supply every red part.
+Answer:mysql> SELECT S.sname FROM suppliers AS S, catalog AS C, parts AS P WHERE S.sid = C.sid AND P.pid = C.pid AND P.color = 'Red' GROUP BY S.sid,S.sname HAVING COUNT(*) = (SELECT COUNT(*) FROM parts AS p WHERE p.color='Red' );
++----------------------+
+| sname                |
++----------------------+
+| Big Red Tool and Die |
++----------------------+
+1 row in set (0.00 sec)
+.....................................................................................................................................................
+4.Find the pnames of parts supplied by "Acme Widget Suppliers" and no one else.
+Answer: SELECT P.pname FROM parts P, catalog C, suppliers S WHERE P.pid =C.pid AND C.sid = S.sid AND S.sname = 'Acme Widget Suppliers' AND NOT EXISTS(SELECT * FROM catalog c, suppliers s WHERE P.pid = c.Pid  AND c.sid = s.sid AND s.sname != 'Acme Widget Suppliers');
++--------------------+
+| pname              |
++--------------------+
+| Acme Widget Washer |
++--------------------+
+1 row in set (0.00 sec)
+..............................................................................................................................................
+5.Find the sids of suppliers who charge more for some part than the average cost of that part (averaged over all the suppliers who supply that part).
+Answer:mysql> SELECT DISTINCT C.sid
+    -> FROM catalog C
+    -> WHERE C.cost > (SELECT AVG(c.cost) FROM catalog c WHERE C.pid = c.pid);
++-----+
+| sid |
++-----+
+|   1 |
+|   2 |
+|   3 |
++-----+
+3 rows in set (0.00 sec)
+..................................................................................................................
+6.For each part, find the sname of the supplier who charges the most for that part.
+Answer:mysql> SELECT S.sname,P.pid FROM suppliers S, catalog C, parts P WHERE C.pid = P.pid AND C.sid = S.sid AND C.cost = (SELECT MAX(c.cost) FROM catalog c WHERE c.pid = C.pid); // since there is for each part in a question i outputted the pid as well.
++-----------------------+-----+
+| sname                 | pid |
++-----------------------+-----+
+| Acme Widget Suppliers |   4 |
+| Big Red Tool and Die  |   1 |
+| Big Red Tool and Die  |   3 |
+| Perfunctory Parts     |   8 |
+| Perfunctory Parts     |   9 |
+| Alien Aircaft Inc.    |   5 |
+| Alien Aircaft Inc.    |   6 |
+| Alien Aircaft Inc.    |   7 |
++-----------------------+-----+
+8 rows in set (0.00 sec)
+..............................................................................................................................................
+7.Find the sids of suppliers who supply only red parts.
+Answer: mysql> SELECT DISTINCT S.sid FROM suppliers S, catalog C,parts P
+    -> WHERE S.sid = C.sid AND C.pid = P.pid AND P.color = 'Red' 
+    -> AND S.sid NOT IN 
+    -> (SELECT s.sid FROM suppliers s, catalog c, parts p WHERE
+    -> s.sid = c.sid AND c.pid = p.pid AND p.color != 'Red');
++-----+
+| sid |
++-----+
+|   2 |
++-----+
+1 row in set (0.00 sec)
+
+9.Find the sids of suppliers who supply a red part or a green part.
+Answer: mysql> SELECT DISTINCT S.sid FROM suppliers S, catalog C, parts P  WHERE S.sid = C.sid AND C.pid = P.pid AND (P.color ='Red' OR P.color = 'Green');
++-----+
+| sid |
++-----+
+|   1 |
+|   2 |
+|   3 |
++-----+
+3 rows in set (0.00 sec)
+
+10.Find the sids of suppliers who supply a red part and a green part.
+Answer: mysql> SELECT S.sid FROM (SELECT C.sid FROM catalog C, parts P WHERE C.pid = P.pid AND P.color = 'Red') AS S, (SELECT c.sid FROM catalog c, parts p WHERE c.pid =p.pid AND p.color = 'Green') AS s WHERE S.sid = s.sid;
++-----+
+| sid |
++-----+
+|   3 |
++-----+
+1 row in set (0.00 sec)
+
+11.Find the sids of suppliers who supply at least two red parts and at least two green parts.
+Answer:SELECT S.sid FROM (SELECT C.sid FROM catalog C, parts P WHERE C.pid=P.pid AND P.color ='Red' GROUP BY C.sid HAVING COUNT(C.pid)>=2) AS S,(SELECT c.sid FROM catalog c,parts p WHERE c.pid = p.pid AND p.color='Green' GROUP BY c.sid HAVING COUNT(c.pid)>=2) AS s WHERE S.sid=s.sid;
+
+Empty set (0.00 sec)
+
+12.For every supplier that only supplies green parts, print the name of the supplier and the total number of parts that she supplies.
+Answer:mysql> SELECT S.sname, COUNT(*) AS TotalnumOFparts FROM suppliers S WHERE NOT EXISTS(SELECT * FROM parts P JOIN catalog C ON P.pid = C.pid WHERE C.sid = S.sid AND P.color <> 'Green');
++-------+-----------------+
+| sname | TotalnumOFparts |
++-------+-----------------+
+| NULL  |               0 |
++-------+-----------------+
+1 row in set (0.00 sec)
+
+13.For every supplier that supplies a green part and a red part, print the name and price of the most expensive part that she supplies.
+Answer: mysql> SELECT S.sname, P.pname,MAX(cost) 
+    -> FROM suppliers S, parts P, catalog C
+    -> WHERE S.sid =C.sid AND 
+    -> C.pid = P.pid AND C.sid IN (SELECT C.sid FROM catalog C
+    -> WHERE NOT EXISTS(SELECT P.pid FROM parts P
+    -> WHERE color !='Green'AND P.pid = C.pid));
++-------------------+------------------+-----------+
+| sname             | pname            | MAX(cost) |
++-------------------+------------------+-----------+
+| Perfunctory Parts | Fire Hydrant Cap |     12.50 |
++-------------------+------------------+-----------+
+1 row in set (0.00 sec)
+
+/******************************************************************************************************************************************/
+
+Exercise 2: Company
+
+Consider the following relational schema. An employee can work in more than one department; the pct_time field of the Works relation shows the percentage of time that a given employee works in a given department.
+
+Emp(eid:integer, ename:string, age:integer, salary:real)
+Works(eid:integer, did:integer, pct_time:integer)
+Dept(did:integer, dname:string, budget:real, managerid:integer)
+
+14. Print the names and ages of each employee who works in both the Hardware department and the Software department.
+Answer:SELECT E.ename, E.age FROM emp E, works W, dept D WHERE E.eid =  W .eid AND W.did = D.did AND D.dname = 'Hardware'AND E.ename IN (SELECT ename FROM emp E, works W, dept D WHERE E.eid = W. eid AND W.did = D.did AND D.dname = 'Software');
++----------------+------+
+| ename          | age  |
++----------------+------+
+| Mary Johnson   |   44 |
+| Stanley Browne |   23 |
++----------------+------+
+2 rows in set (0.00 sec)
+
+15.For each department with more than 20 full-time-equivalent employees (i.e., where the part-time and full-time employees add up to at least that many full-time employees), print the did together with the number of employees that work in that department.
+Answer: 
+SELECT W.did, COUNT(eid) AS numOFemployees FROM works W, dept D WHERE W.did = D.did  GROUP BY did HAVING SUM(pct_time)>2000;
++-----+----------------+
+| did | numOFemployees |
++-----+----------------+
+|   2 |             26 |
+|   6 |             22 |
++-----+----------------+
+2 rows in set (0.00 sec)
+
+16.Print the name of each employee whose salary exceeds the budget of all of the departments that he or she works in.
+Answer: SELECT ename FROM emp E,works W, dept D WHERE E.eid = W.eid AND W.did = D.did  AND E.salary > ALL (SELECT d.budget FROM dept d,works w WHERE d.did=D.did);
++-------------+
+| ename       |
++-------------+
+| Linda Davis |
++-------------+
+1 row in set (0.00 sec)
+
+17. Find the managerids of managers who manage only departments with budgets greater than $1 million.
+Answer: mysql> SELECT DISTINCT D.managerid  FROM dept D  WHERE 1000000 < ALL (select d.budget from dept d where d.managerid = D.managerid );
++-----------+
+| managerid |
++-----------+
+| 287321212 |
+| 578875478 |
++-----------+
+2 rows in set (0.00 sec)
+
+18.Find the enames of managers who manage the departments with the largest budgets.
+ANswer:SELECT ename FROM emp E, dept D WHERE D.managerid = E.eid AND budget=(SELECT MAX(budget) FROM dept ); 
++----------------+
+| ename          |
++----------------+
+| Michael Miller |
+| Edward Baker   |
++----------------+
+2 rows in set (0.00 sec)
+
+19. If a manager manages more than one department, he or she controls the sum of all the budgets for those departments. Find the managerids of managers who control more than $5 million.
+Answer:SELECT D.managerid
+    -> FROM dept D GROUP BY D.managerid HAVING SUM(D.budget) > 5000000;
++-----------+
+| managerid |
++-----------+
+| 287321212 |
+| 578875478 |
++-----------+
+2 rows in set (0.00 sec)
+
+20.Find the managerids of managers who control the largest amounts.
+Answer: SELECT managerid FROM dept D WHERE budget=(SELECT MAX(budget) FROM dept);
++-----------+
+| managerid |
++-----------+
+| 287321212 |
+| 578875478 |
++-----------+
+2 rows in set (0.00 sec)
+
+21.Find the enames of managers who manage only departments with budgets larger than $1 million, but at least one department with budget less than $5 million.
+Answer: SELECT E.ename FROM emp E, dept D WHERE E.eid = D.managerid GROUP BY E.eid, E.ename HAVING MIN(D.budget > 1000000) AND MIN(D.budget<5000000);
+Empty set (0.00 sec)
+
+/****************************************************************************************************************************************************/
+Exercise 3: University
+
+This exercise uses the following relations:
+
+Student(snum:integer, sname:string, major:string, level:string, age:integer)
+Class(cname:string, meets_at:string, room:string, fid:integer)
+Enrolled(snum:integer, cname:string)
+Faculty(fid:integer, fname:string, deptid:integer)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+22. Find the names of all junior students (level = JR) who are enrolled in a class taught by Ivana Teach.
+Answer: mysql> SELECT DISTINCT S.sname  FROM student S, enrolled E, class C, faculty F WHERE E.snum = S.snum AND C.cname = E.cname AND C.fid = F.fid AND F.fname = 'Ivana Teach' AND S.level = 'JR';
++--------------------+
+| sname              |
++--------------------+
+| Christopher Garcia |
+| Paul Hall          |
++--------------------+
+2 rows in set (0.00 sec)
+
+23. Find the names of students not enrolled in any class.
+Answer:  SELECT DISTINCT S.sname FROM student S WHERE S.snum NOT IN (SELECT snum FROM enrolled );
++-----------------+
+| sname           |
++-----------------+
+| Maria White     |
+| Charles Harris  |
+| Angela Martinez |
+| Thomas Robinson |
+| Margaret Clark  |
+| Dorthy Lewis    |
+| Daniel Lee      |
+| Nancy Allen     |
+| Mark Young      |
+| Donald King     |
+| George Wright   |
+| Steven Green    |
+| Edward Baker    |
++-----------------+
+13 rows in set (0.00 sec)
+
+24. Find the students who are enrolled in two classes taught by the same faculty. List student names together with the two class names.
+Answer:  mysql> SELECT sname, classname1, classname2 FROM (SELECT snum, C.cname AS classname1, fid FROM class C, enrolled WHERE C.cname = enrolled.cname) AS C, (SELECT snum, c.cname AS classname2, fid FROM class c, enrolled WHERE c.cname = enrolled .cname) AS c, student s WHERE C.classname1 > c.classname2 AND C.snum = c.snum AND C.fid = c. fid AND C.snum = s.snum AND c.snum = s.snum;
++-------------+-------------------------+-----------------+
+| sname       | classname1              | classname2      |
++-------------+-------------------------+-----------------+
+| Karen Scott | Operating System Design | Data Structures |
++-------------+-------------------------+-----------------+
+1 row in set (0.00 sec)
+
+
+25.Find the names of faculty members who teach in every room in which some class is taught.
+Answer: SELECT fname  FROM class C, faculty F  WHERE C.fid=F.fid  GROUP BY C.fid  HAVING COUNT( DISTINCT cname ) = ( SELECT COUNT( DISTINCT room ) FROM class );
++-----------------+
+| fname           |
++-----------------+
+| Richard Jackson |
++-----------------+
+1 row in set (0.00 sec)
+
+26.Print the level and the average age of students for that level, for each level.
+Answer: SELECT level,AVG(age) AS age FROM student GROUP BY level;
++-------+---------+
+| level | age     |
++-------+---------+
+| FR    | 17.6667 |
+| JR    | 19.5000 |
+| SO    | 18.4000 |
+| SR    | 20.7143 |
++-------+---------+
+4 rows in set (0.00 sec)
+
+27. Print the level and the average age of students for that level, for all levels except JR.
+Answer: SELECT S.level, AVG(S.age) AS AGE FROM student S WHERE S.level <> 'JR' GROUP BY S.level;
++-------+---------+
+| level | AGE     |
++-------+---------+
+| FR    | 17.6667 |
+| SO    | 18.4000 |
+| SR    | 20.7143 |
++-------+---------+
+3 rows in set (0.00 sec)
+
+27.For each faculty member that has taught classes only in room R128, print the faculty member's name and the total number of classes she or he has taught.
+Answer: SELECT F.fname,COUNT(*) AS TotalnumOFclasses FROM faculty F,class C WHERE F.fid = C.fid GROUP BY fname,F.fid HAVING MIN(C.room = 'R128');
++--------------+-------------------+
+| fname        | TotalnumOFclasses |
++--------------+-------------------+
+| Robert Brown |                 1 |
++--------------+-------------------+
+1 row in set (0.01 sec)
+
+28.Find the names of students enrolled in the maximum number of classes.
+aNSWER: SELECT DISTINCT S.sname FROM student S WHERE S.snum IN (SELECT enrolled.snum FROM enrolled 
+    -> GROUP BY enrolled.snum HAVING COUNT(*) >= ALL (SELECT COUNT(*) FROM enrolled GROUP BY enrolled.snum));
++----------------+
+| sname          |
++----------------+
+| Juan Rodriguez |
+| Ana Lopez      |
++----------------+
+2 rows in set (0.00 sec)
+
+29.Find the names of faculty members for whom the combined enrollment of the courses that they teach is less than five.
+Answer: SELECT DISTINCT F.fname FROM faculty F WHERE (SELECT COUNT(E.snum) FROM class C,enrolled E WHERE C.cname = E.cname AND C.fid=F.fid) < 5;
++------------------+
+| fname            |
++------------------+
+| John Williams    |
+| Elizabeth Taylor |
+| Mary Johnson     |
+| William Moore    |
+| James Smith      |
+| Barbara Wilson   |
+| Patricia Jones   |
+| Michael Miller   |
+| Robert Brown     |
+| David Anderson   |
+| Richard Jackson  |
+| Ulysses Teach    |
+| Jennifer Thomas  |
++------------------+
+13 rows in set (0.01 sec)
+
+30. Find the age of the oldest student who is either a History major or enrolled in a course taught by Ivana Teach.
+Answer:  SELECT MAX(S.age) AS oldest_age FROM student S WHERE S.major='History' OR S.snum IN (SELECT MAX(s.age) FROM student s , enrolled e, class c,faculty f WHERE s.snum = e.snum AND c.cname=e.cname AND c.fid=f.fid AND f.fname ='Ivana Teach');
++------------+
+| oldest_age |
++------------+
+|         20 |
++------------+
+1 row in set (0.01 sec)
+
+31.Find the names of all classes that either meet in room R128 or have five or more students enrolled.
+Answer: SELECT C.cname FROM class C WHERE C.room = 'R128' UNION (SELECT E.cname FROM enrolled E GROUP BY E.cname HAVING COUNT(E.snum)>=5);
++--------------------------+
+| cname                    |
++--------------------------+
+| Archaeology of the Incas |
+| Dairy Herd Management    |
+| Data Structures          |
+| Intoduction to Math      |
+| Patent Law               |
+| Database Systems         |
+| Operating System Design  |
++--------------------------+
+7 rows in set (0.00 sec)
+
+32. For each age value that appears in the Student table, find the level value that appears most often. For example, if there are more FR level students aged 18 than SR, JR, or SO students aged 18, you should print the pair (18, FR).
+Answer: SELECT S.age,S.level FROM student S GROUP BY S.age,S.level HAVING S.level IN (SELECT s.level from student s WHERE S.age = s.age GROUP BY s.level,s.age HAVING COUNT(*) >= ALL(SELECT COUNT(*) FROM student st WHERE s.age = st.age GROUP BY st.age,st.level));
++------+-------+
+| age  | level |
++------+-------+
+|   17 | FR    |
+|   18 | FR    |
+|   19 | SO    |
+|   20 | JR    |
+|   21 | SR    |
+|   22 | SR    |
++------+-------+
+6 rows in set (0.00 sec)
+/*************************************************************************************************************************************************/
+
+Exercise 4: Flights
+
+The following relations keep track of airline flight information:
+
+Flights(flno:integer, origin:string, destination:string, distance:integer, 
+	departs:datetime, arrives:datetime, price:integer)
+Aircraft(aid:integer, aname:string, cruisingrange:integer)
+Certified(eid:integer, aid:integer)
+Employees(eid:integer, ename:string, salary:integer)
+/****************************************************************************************************************************************************/
+
+33. Find the names of aircraft such that all pilots certified to operate them earn more than $80,000.
+Answer: SELECT DISTINCT A.aname FROM aircraft A WHERE NOT EXISTS ( SELECT DISTINCT C.aid FROM certified C, employees E WHERE C.eid = E.eid AND A.aid = C.aid AND salary < 80000);
++--------------------------------+
+| aname                          |
++--------------------------------+
+| Boeing 747-400                 |
+| Boeing 737-800                 |
+| Airbus A340-300                |
+| British Aerospace Jetstream 41 |
+| Tupolev 154                    |
+| Lockheed L1011                 |
+| Boeing 757-300                 |
+| Boeing 777-300                 |
+| Boeing 767-400ER               |
+| Airbus A320                    |
+| Airbus A319                    |
+| Boeing 727                     |
+| Schwitzer 2-33                 |
++--------------------------------+
+13 rows in set (0.00 sec)
+
+34. For each pilot who is certified for more than three aircraft, find the eid and the maximum cruising range of the aircraft for which she or he is certified.
+Answer: SELECT MAX(A.cruisingrange) AS maximumcrusingrange,C.eid FROM aircraft A, certified C WHERE A.aid = C.aid GROUP BY C.eid HAVING COUNT(*) > 3;
++---------------------+-----------+
+| maximumcrusingrange | eid       |
++---------------------+-----------+
+|                8430 | 142519864 |
+|                8430 | 269734834 |
+|                8430 | 567354612 |
++---------------------+-----------+
+3 rows in set (0.00 sec)
+
+35.Find the names of pilots whose salary is less than the price of the cheapest route from Los Angeles to Honolulu.
+answer: SELECT E.ename FROM employees E WHERE E.salary < (SELECT MIN(F.price) FROM flights F WHERE F.origin = 'Los Angeles' AND F.destination = 'Honolulu');
++-------------+
+| ename       |
++-------------+
+| Milo Brooks |
++-------------+
+1 row in set (0.00 sec)
+
+36. For all aircraft with cruising range over 1000 miles, find the name of the aircraft and the average salary of all pilots certified for this aircraft.
+Answer: SELECT A.aname, avg(salary) as averageSalary  from aircraft A, certified C, employees E where A.aid=C.aid and E.eid=C.eid and cruisingrange>1000 GROUP BY aname;
++--------------------------------+---------------+
+| aname                          | averageSalary |
++--------------------------------+---------------+
+| Airbus A319                    | 201283.666667 |
+| Airbus A320                    | 243198.333333 |
+| Airbus A340-300                | 217597.666667 |
+| Boeing 727                     | 273215.500000 |
+| Boeing 737-800                 | 191700.250000 |
+| Boeing 747-400                 | 244776.750000 |
+| Boeing 757-300                 | 189508.571429 |
+| Boeing 767-400ER               | 209557.000000 |
+| Boeing 777-300                 | 257973.333333 |
+| British Aerospace Jetstream 41 | 220251.333333 |
+| Embraer ERJ-145                | 182838.200000 |
+| Lockheed L1011                 | 242685.750000 |
+| SAAB 340                       | 118113.500000 |
+| Tupolev 154                    | 205001.250000 |
++--------------------------------+---------------+
+14 rows in set (0.00 sec)
+
+
+37. Find the aids of all aircraft that can be used on routes from Los Angeles to Chicago.
+Answer: mysql> SELECT A.aid, A.aname FROM aircraft A WHERE A.cruisingrange > (SELECT MIN(F.distance) FROM flights F WHERE F.origin = 'Los Angeles' AND F.destination = 'Chicago');
++-----+------------------+
+| aid | aname            |
++-----+------------------+
+|   1 | Boeing 747-400   |
+|   2 | Boeing 737-800   |
+|   3 | Airbus A340-300  |
+|   6 | SAAB 340         |
+|   8 | Tupolev 154      |
+|   9 | Lockheed L1011   |
+|  10 | Boeing 757-300   |
+|  11 | Boeing 777-300   |
+|  12 | Boeing 767-400ER |
+|  13 | Airbus A320      |
+|  14 | Airbus A319      |
++-----+------------------+
+11 rows in set (0.00 sec)
+
+38.Identify the routes that can be piloted by every pilot who makes more than $100,000.
+Answer: mysql> SELECT DISTINCT F.destination,F.origin FROM flights F WHERE NOT EXISTS (SELECT * FROM employees E WHERE E.salary > 100000 AND NOT EXISTS (SELECT * FROM aircraft A,certified C WHERE A.cruisingrange > F.distance AND E.eid = C.eid AND A.aid=C.aid));
+
+Empty set (0.00 sec)
+
+39. Print the names of pilots who can operate aircrafts with cruising range greater than 3000 miles but are not certified on any Boeing aircraft.
+Answer:  SELECT E.ename from employees E, certified C, aircraft A where C.eid = E.eid and A.aid = C.aid and A.cruisingrange > 3000 and E.eid NOT IN (SELECT e.eid from employees e, certified c, aircraft a where c.eid = e.eid and c.aid = a.aid and a.aname like "%boeing%");
++-----------------+
+| ename           |
++-----------------+
+| Lawrence Sperry |
+| Eric Cooper     |
+| Joseph Thompson |
+| Angela Martinez |
+| William Jones   |
+| Joseph Thompson |
+| Angela Martinez |
++-----------------+
+7 rows in set (0.00 sec)
+
+40.Compute the difference between the average salary of pilots and the average salary of all employees (including pilots).
+Answer: 
+
+41.  Print the name and salary of every non-pilot whose salary is more than the average salary for pilots.
+Answer: SELECT ename, salary  from employees  where eid NOT IN (select eid from certified) and salary> (SELECT AVG(salary) from employees where eid in (SELECT eid from certified));
++----------------+-----------+
+| ename          | salary    |
++----------------+-----------+
+| David Anderson | 743001.00 |
++----------------+-----------+
+1 row in set (0.00 sec)
+
+42. Print the names of employees who are certified only on aircrafts with cruising range longer than 1000 miles.
+aNSWER: SELECT DISTINCT ename from employees E WHERE NOT EXISTS (SELECT * from certified C, aircraft A where C.eid = E.eid and A.aid = C.aid and cruisingrange <= 1000) and EXISTS (SELECT * from certified c, aircraft a, employees e where c.eid = e.eid and c.aid = a.aid AND cruisingrange > 1000 AND E.eid=e.eid);
++------------------+
+| ename            |
++------------------+
+| John Williams    |
+| Elizabeth Taylor |
+| Mary Johnson     |
+| James Smith      |
+| Michael Miller   |
+| Joseph Thompson  |
+| Angela Martinez  |
+| Robert Brown     |
+| Lawrence Sperry  |
+| Karen Scott      |
+| Mark Young       |
+| Eric Cooper      |
+| William Jones    |
++------------------+
+13 rows in set (0.00 sec)
+
+43. Print the names of employees who are certified only on aircrafts with cruising range longer than 1000 miles, but on at least two such aircrafts.
+Answer: SELECT DISTINCT ename from employees E WHERE NOT EXISTS (SELECT * from certified C, aircraft A where C.eid = E.eid and A.aid = C.aid and cruisingrange <= 1000) AND (SELECT count(a.aid) from certified c, aircraft a,employees e WHERE e.eid = c.eid and c.aid = a.aid AND E.eid=e.eid AND cruisingrange > 1000) > 1;
++-----------------+
+| ename           |
++-----------------+
+| John Williams   |
+| Mary Johnson    |
+| James Smith     |
+| Michael Miller  |
+| Joseph Thompson |
+| Angela Martinez |
+| Lawrence Sperry |
+| Karen Scott     |
+| Mark Young      |
+| Eric Cooper     |
+| William Jones   |
++-----------------+
+11 rows in set (0.01 sec)
+
+44.Print the names of employees who are certified only on aircrafts with cruising range longer than 1000 miles and who are certified on some Boeing aircraft.
+anser: SELECT DISTINCT ename FROM employees E WHERE NOT EXISTS (SELECT * FROM certified C, aircraft A WHERE E.eid = C.eid AND C.aid = A.aid AND A.cruisingrange <=1000) AND (SELECT COUNT(a.aid) FROM aircraft a, certified c, employees e WHERE c.eid = e.eid AND a.aid = c.aid AND a.cruisingrange > 1000 AND a.aname LIKE '%boeing%' AND E.eid = e.eid) ;
++----------------+
+| ename          |
++----------------+
+| John Williams  |
+| Mary Johnson   |
+| James Smith    |
+| Michael Miller |
+| Karen Scott    |
+| Mark Young     |
++----------------+
+6 rows in set (0.00 sec)
+
+
