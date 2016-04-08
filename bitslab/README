@@ -1,0 +1,20 @@
+Author: Roshan Adhikari
+System: Ubuntu 14.04 LTS
+Text Editor: Vim,gedit
+Assignment 3
+
+IMPORTANT:
+*some examples which were given initially are changed in test.c file in order to check for different test cases.*
+
+Compiling:
+syntax: gcc -std=c99 -Wall -o bitslab bitslab.c test.c
+Output:
+syntax:  ./bitslab
+
+References used: 
+http://kias.dyndns.org/comath/13.html
+stackoverflow.com/questions/18971861/how-to-guard-against-bit-overflow-in-c-using-only-bitwise-operators
+https://www.cs.cornell.edu/~tomf/notes/cps104/twoscomp.html
+stackoverflow.com/questions/5253194/implementing-logical-right-shift-in-c
+courses.cs.washington.edu/courses/cse351/13au/labs/lab1/lab1/fshow.c
+stackoverflow.com/questions/12961218/bit-level-expression-for-single-precision-floating-point-negation

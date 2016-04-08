@@ -1,0 +1,21 @@
+Script started on Tue 02 Feb 2016 02:30:41 AM EST
+]0;roshan@roshan-Satellite-C55-C: ~/cprograms/bitslabroshan@roshan-Satellite-C55-C:~/cprograms/bitslab$ gcc -std=c99 -Wall -o bitslab bitslab.c test.c
+]0;roshan@roshan-Satellite-C55-C: ~/cprograms/bitslabroshan@roshan-Satellite-C55-C:~/cprograms/bitslab$ ./bitslab
+Test with main.
+bitAnd Result: 3
+getByte Result: 52 
+bitcount Result: 3 
+bang result is: 0 
+minimum two's complement integer is: -2147483648 
+fitbits result is: 1 
+divpwr2 result  is: -2 
+negate result is: -4 
+isPositive result is: 0 
+isLessOrEqual result is: 1 
+float_neg result is: -2147483635 
+float_i2f result is: 1097859072 
+float_twice result is: 18 
+]0;roshan@roshan-Satellite-C55-C: ~/cprograms/bitslabroshan@roshan-Satellite-C55-C:~/cprograms/bitslab$ exit
+exit
+
+Script done on Tue 02 Feb 2016 02:31:23 AM EST
