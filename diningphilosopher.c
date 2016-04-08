@@ -42,9 +42,7 @@
 	void * philosopher(void *param) // philosopher numbers
 		{
 			int i=*((int *)param);
-			 //just for sleeping purpose
-			
-
+			 
 			while(1) // while true repeat forever
 				{
 					sleep(1); //sleep for 1-> think
