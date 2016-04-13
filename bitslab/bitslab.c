@@ -277,40 +277,7 @@ return res;
  *   Max ops: 30
  *   Points: 4
  */
- unsigned float_i2f(int x) {  
-        unsigned shift=0;  
-        unsigned changedbits, temp, flag;  
-        unsigned abs=x;  
-        unsigned sign=0;  
-        
-    if (x==0) return 0;  
-   
-    if (x<0)  
-    {  
-        sign=0x80000000;  
-        abs=-x;  
-    }  
-        changedbits=abs;  
-        
-        while (1)  
-        {  
-                temp=changedbits;  
-                changedbits<<=1;  
-                shift++;  
-                if (temp & 0x80000000) break;  
-        }  
-        if ((changedbits & 0x01ff)>0x0100)  
-                flag=1;  
-    else if ((changedbits & 0x03ff)==0x0300)  
-                flag=1;  
-    else  
-                flag=0;  
-  
-        return sign + (changedbits>>9) + ((159-shift)<<23) + flag; 
-}
-//}
-
-
+ 
 /* 
  * float_twice - Return bit-level equivalent of expression 2*f for
  *   floating point argument f.
@@ -321,18 +288,7 @@ return res;
  *   Max ops: 30
  *   Points: 4
  */
-unsigned float_twice(unsigned uf) {
-	 unsigned floatnumber=uf;  
-        
-    if ((floatnumber & 0x7F800000) == 0){  
-         
-        floatnumber = ((floatnumber & 0x007FFFFF)<<1) | (0x80000000 & floatnumber);  
-    }  
-    else if ((floatnumber & 0x7F800000) != 0x7F800000){  
-                  floatnumber +=0x00800000;  
-        }  
-    return floatnumber;  
- }
+
 //}
 
 
