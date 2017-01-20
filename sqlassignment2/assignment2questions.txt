@@ -1,0 +1,99 @@
+Download the attached zip file, which contains all data you need for this assignment. Run "mysql < createdb.sql" to create database schema. Run "./loaddata.sh" to load data into the database.
+Exercise 1: Product Catalog
+
+This exercise uses the following relations:
+
+Suppliers(sid:integer, sname:string, address:string)
+Parts(pid:integer, pname:string, color:string)
+Catalog(sid:integer, pid:integer, cost:real)
+
+The Catalog relation lists the prices charged for parts by suppliers. Write the following queries in SQL:
+
+    Find the pnames of parts for which there is some supplier.
+    Find the snames of suppliers who supply every part.
+    Find the snames of suppliers who supply every red part.
+    Find the pnames of parts supplied by "Acme Widget Suppliers" and no one else.
+    Find the sids of suppliers who charge more for some part than the average cost of that part (averaged over all the suppliers who supply that part).
+    For each part, find the sname of the supplier who charges the most for that part.
+    Find the sids of suppliers who supply only red parts.
+    Find the sids of suppliers who supply a red part or a green part.
+    Find the sids of suppliers who supply a red part and a green part.
+    Find the sids of suppliers who supply at least two red parts and at least two green parts.
+    For every supplier that only supplies green parts, print the name of the supplier and the total number of parts that she supplies.
+    For every supplier that supplies a green part and a red part, print the name and price of the most expensive part that she supplies.
+
+Exercise 2: Company
+
+Consider the following relational schema. An employee can work in more than one department; the pct_time field of the Works relation shows the percentage of time that a given employee works in a given department.
+
+Emp(eid:integer, ename:string, age:integer, salary:real)
+Works(eid:integer, did:integer, pct_time:integer)
+Dept(did:integer, dname:string, budget:real, managerid:integer)
+
+Write the following queries in SQL:
+
+    Print the names and ages of each employee who works in both the Hardware department and the Software department.
+    For each department with more than 20 full-time-equivalent employees (i.e., where the part-time and full-time employees add up to at least that many full-time employees), print the did together with the number of employees that work in that department.
+    Print the name of each employee whose salary exceeds the budget of all of the departments that he or she works in.
+    Find the managerids of managers who manage only departments with budgets greater than $1 million.
+    Find the enames of managers who manage the departments with the largest budgets.
+    If a manager manages more than one department, he or she controls the sum of all the budgets for those departments. Find the managerids of managers who control more than $5 million.
+    Find the managerids of managers who control the largest amounts.
+    Find the enames of managers who manage only departments with budgets larger than $1 million, but at least one department with budget less than $5 million.
+
+Exercise 3: University
+
+This exercise uses the following relations:
+
+Student(snum:integer, sname:string, major:string, level:string, age:integer)
+Class(cname:string, meets_at:string, room:string, fid:integer)
+Enrolled(snum:integer, cname:string)
+Faculty(fid:integer, fname:string, deptid:integer)
+
+The meaning of these relations is straightforward; for example, Enrolled has one record per student-class pair such that the student is enrolled in the class. Write the following queries in SQL. No duplicates should be printed in any of the answers.
+
+    Find the names of all junior students (level = JR) who are enrolled in a class taught by Ivana Teach.
+    Find the names of students not enrolled in any class.
+    Find the students who are enrolled in two classes taught by the same faculty. List student names together with the two class names.
+    Find the names of faculty members who teach in every room in which some class is taught.
+    Print the level and the average age of students for that level, for each level.
+    Print the level and the average age of students for that level, for all levels except JR.
+    For each faculty member that has taught classes only in room R128, print the faculty member's name and the total number of classes she or he has taught.
+    Find the names of students enrolled in the maximum number of classes.
+    Find the names of faculty members for whom the combined enrollment of the courses that they teach is less than five.
+    Find the age of the oldest student who is either a History major or enrolled in a course taught by Ivana Teach.
+    Find the names of all classes that either meet in room R128 or have five or more students enrolled.
+    For each age value that appears in the Student table, find the level value that appears most often. For example, if there are more FR level students aged 18 than SR, JR, or SO students aged 18, you should print the pair (18, FR).
+
+Exercise 4: Flights
+
+The following relations keep track of airline flight information:
+
+Flights(flno:integer, origin:string, destination:string, distance:integer, 
+	departs:datetime, arrives:datetime, price:integer)
+Aircraft(aid:integer, aname:string, cruisingrange:integer)
+Certified(eid:integer, aid:integer)
+Employees(eid:integer, ename:string, salary:integer)
+
+Note that the Employees relation describes pilots and other kinds of employees as well; every pilot is certified for some aircraft, and only pilots are certified to fly. Write each of the following queries in SQL:
+
+    Find the names of aircraft such that all pilots certified to operate them earn more than $80,000.
+    For each pilot who is certified for more than three aircraft, find the eid and the maximum cruising range of the aircraft for which she or he is certified.
+    Find the names of pilots whose salary is less than the price of the cheapest route from Los Angeles to Honolulu.
+    For all aircraft with cruising range over 1000 miles, find the name of the aircraft and the average salary of all pilots certified for this aircraft.
+    Find the aids of all aircraft that can be used on routes from Los Angeles to Chicago.
+    Identify the routes that can be piloted by every pilot who makes more than $100,000.
+    Print the names of pilots who can operate aircrafts with cruising range greater than 3000 miles but are not certified on any Boeing aircraft.
+    Compute the difference between the average salary of pilots and the average salary of all employees (including pilots).
+    Print the name and salary of every non-pilot whose salary is more than the average salary for pilots.
+    Print the names of employees who are certified only on aircrafts with cruising range longer than 1000 miles.
+    Print the names of employees who are certified only on aircrafts with cruising range longer than 1000 miles, but on at least two such aircrafts.
+    Print the names of employees who are certified only on aircrafts with cruising range longer than 1000 miles and who are certified on some Boeing aircraft.
+
+Put your answers in a single plain text file and submit to e-learning portal.
+
+For each question, include in your submission:
+
+    the question itself;
+    your SQL statement;
+    query result
