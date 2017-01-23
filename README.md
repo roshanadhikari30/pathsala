@@ -1,3 +1,4 @@
-# pathsala
-
-Just some programming practice//
+#pathsala
+//fibonacci sequence- ruby,php
+//bits manipulation - C
+//kruskal algorithm- implementation in ruby
